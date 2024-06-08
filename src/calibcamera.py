@@ -1,36 +1,18 @@
 import cv2
 import numpy as np
 import os
+import sys
 import json
 
-#CAMERA CALIBRATION - Script para calibração de intrinsecos das câmaras
+#CAMERA CALIBRATION - Script para calibraï¿½ï¿½o de intrinsecos das cï¿½maras
 
-# Parameters
+# Global Parameters
 CAM_INDEX=1 #camara usb - 0 default
 chessboard_size = (9, 6)  # Dimensions of the chessboard pattern
 chessboard_sq_size = (16.8, 16.8)  # Dimensions of the chessboard pattern
 min_displacement = 100  # Minimum displacement in pixels between acquisitions
 quiet_displacement = 15 # Max displacement to be accepted as quiet
-
-# Create a directory to save images if it does not exist
 output_dir = "calibration_images"
-os.makedirs(output_dir, exist_ok=True)
-
-# Initialize the webcam
-cap = cv2.VideoCapture(CAM_INDEX,cv2.CAP_DSHOW)
-if not cap.isOpened():
-    print("Error: Could not open webcam.")
-    exit()
-
-# Set max resolution
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT,10000)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH,10000)
-
-# Initialize variables
-
-last_corners = None
-image_counter = 0
-corner_coordinates_list = []
 
 def save_image(frame, counter):
     filename = f"{output_dir}/chessboard_{counter:04d}.png"
@@ -81,7 +63,32 @@ def acquire_gray(cap):
 
 # MAIN LOOP -
 # acquire image, detect corner if image changed, wait to be quiet, acquire final
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("using default folder or else Usage: python calibcamera.py <folder_name>")
+    else:
+        output_dir = sys.argv[1]
 
+os.makedirs(output_dir, exist_ok=True)
+
+
+# Initialize the webcam
+cap = cv2.VideoCapture(CAM_INDEX,cv2.CAP_DSHOW)
+if not cap.isOpened():
+    print("Error: Could not open webcam.")
+    exit()
+
+# Set max resolution
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT,600)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH,800)
+
+# Initialize variables
+
+last_corners = None
+image_counter = 0
+corner_coordinates_list = []
+
+print(os.path.abspath(output_dir))
 while True:
 
     # Capture a frame from the webcam
@@ -139,5 +146,6 @@ cap.release()
 cv2.destroyAllWindows()
 
 # Calibrate the camera and save the parameters
+print("Calibrating camera")
 output_params_file = f"{output_dir}/camera_params.json"
 calibrate_camera(corner_coords_file, chessboard_size, output_params_file)
