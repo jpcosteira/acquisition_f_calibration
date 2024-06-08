@@ -7,15 +7,24 @@ import json
 #CAMERA CALIBRATION - Script para calibra��o de intrinsecos das c�maras
 
 # Global Parameters
+#FROM:  https://www.geeksforgeeks.org/calibratecamera-opencv-in-python/
+# termination criteria 
+criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001) 
+
 CAM_INDEX=1 #camara usb - 0 default
+#camera resolution
+resolution_width=800 #max resolution put 100000
+resolution_height=600
+
 chessboard_size = (9, 6)  # Dimensions of the chessboard pattern
 chessboard_sq_size = (16.8, 16.8)  # Dimensions of the chessboard pattern
-min_displacement = 100  # Minimum displacement in pixels between acquisitions
-quiet_displacement = 15 # Max displacement to be accepted as quiet
+min_displacement = resolution_width/20  # Minimum displacement in pixels between acquisitions
+quiet_displacement = 10 # Max displacement to be accepted as quiet
+
 output_dir = "calibration_images"
 
 def save_image(frame, counter):
-    filename = f"{output_dir}/chessboard_{counter:04d}.png"
+    filename = f"{output_dir_images}/chessboard_{counter:04d}.png"
     cv2.imwrite(filename, frame)
     print(f"Saved {filename}")
 
@@ -42,11 +51,15 @@ def calibrate_camera(corner_coords_file, chessboard_sq_size, output_params_file)
         # Save camera parameters to a file
         calib_params = {
             'camera_matrix': camera_matrix.tolist(),
-            'dist_coeffs': dist_coeffs.tolist()
+            'dist_coeffs': dist_coeffs.tolist(),
+            'resolutionx': resolution_width,
+            'resolutiony': resolution_height,
+            'error': ret
+            'fx':camera_matrix[0,0]
         }
         with open(output_params_file, 'w') as f:
             json.dump(calib_params, f)
-        print(f"Saved camera parameters to {output_params_file}")
+        print(f"Saved camera parameters to {output_params_file}",calib_params)
     else:
         print("Camera calibration failed")
 mostra=1,
@@ -69,7 +82,12 @@ if __name__ == "__main__":
     else:
         output_dir = sys.argv[1]
 
+output_dir_images=output_dir+"/Images"
+output_dir_params=output_dir + "/Params"
+
 os.makedirs(output_dir, exist_ok=True)
+os.makedirs(output_dir_images, exist_ok=True)
+os.makedirs(output_dir_params, exist_ok=True)
 
 
 # Initialize the webcam
@@ -79,8 +97,8 @@ if not cap.isOpened():
     exit()
 
 # Set max resolution
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT,600)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH,800)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT,resolution_height)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH,resolution_width)
 
 # Initialize variables
 
@@ -104,7 +122,7 @@ while True:
     if ret:
         # If first image, save it immediately
         if last_corners is None:
-            image_counter += 1
+            image_counter = 1
             last_corners = corners
         else:
             # Calculate displacement
@@ -114,11 +132,17 @@ while True:
                 # Keep the board quiet
                 while displacement2 > quiet_displacement:#only if board is still
                     retg,gray,frame=acquire_gray(cap)
+                    framed=frame.copy()
                     ret, corners2 = cv2.findChessboardCorners(gray, chessboard_size, None)
+                    
                     if ret:
                         displacement2 = np.max(np.abs(corners - corners2))
                         corners =corners2
+                        cv2.drawChessboardCorners(framed, chessboard_size, corners, ret)
                         print(f"Be quiet")
+                    cv2.imshow('Waiting',framed)
+                    cv2.waitKey(1)    
+                corners = cv2.cornerSubPix(gray, corners2, chessboard_size, (-1, -1), criteria) 
                 save_image(frame, image_counter)
                 image_counter += 1
                 last_corners = corners
@@ -131,11 +155,11 @@ while True:
     cv2.imshow('Webcam', frame)
 
     # Check for 'W' key press to exit
-    if cv2.waitKey(1) & 0xFF == ord('w'):
+    if cv2.waitKey(10) & 0xFF == ord('w'):
         break
 
 # Save corner coordinates to a file
-corner_coords_file = f"{output_dir}/corner_coordinates.json"
+corner_coords_file = f"{output_dir_params}/corner_coordinates.json"
 with open(corner_coords_file, 'w') as f:
     json.dump(corner_coordinates_list, f)
 
