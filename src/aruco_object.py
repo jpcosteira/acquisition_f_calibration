@@ -6,6 +6,9 @@ import time
 #SCRIPT TO ACQUIRE IMAGES FROM CALIBRATION OBJECT
 
 CAM_INDEX=1
+#camera resolution
+resolution_width=800 #max resolution put 100000
+resolution_height=600
 # Set up webcam capture
 cap = cv2.VideoCapture(CAM_INDEX,cv2.CAP_DSHOW)
 
@@ -15,8 +18,8 @@ if not cap.isOpened():
     exit()
 
 # Set max resolution
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT,10000)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH,10000)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT,resolution_height)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH,resolution_width)
 
 # Create ArUco dictionary and parameters
 #aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_6X6_250)

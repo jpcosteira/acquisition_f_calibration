@@ -2,6 +2,8 @@
 import numpy as np 
 import cv2 as cv 
 import glob 
+import os
+import json
   
 #FROM:  https://www.geeksforgeeks.org/calibratecamera-opencv-in-python/
 # termination criteria 
@@ -54,12 +56,13 @@ for f in images:
         cv.drawChessboardCorners(img, chessboard_size, corners2, ret) 
         cv.imwrite('output.jpg', img) #To save corner-drawn image 
         cv.imshow('img', img) 
-        cv.waitKey(0) 
+        cv.waitKey(1) 
 cv.destroyAllWindows() 
   
 """Camera calibration:  
 Passing the value of known 3D points (obj points) and the corresponding pixel coordinates  
 of the detected corners (img points)"""
+print("Calibrating camera")
 ret, camera_mat, distortion, rotation_vecs, translation_vecs = cv.calibrateCamera( 
     obj_points, img_points, gray.shape[::-1], None, None) 
 calib_params = {
@@ -69,12 +72,11 @@ calib_params = {
             'resolutiony': img.shape[1],
             'error': ret
         }
+#SAVE CALIBRATION
 os.makedirs("CamParams", exist_ok=True)
-with open("CamParams/calib_params", 'w') as f:
+with open("CamParams/camera_params.json", 'w') as f:
         json.dump(calib_params, f)
-        print(f"Saved camera parameters to {output_params_file}",calib_params)
+        print(f"Saved camera parameters to CamParams/calib_params",calib_params)
 print("Error in projection : \n", ret) 
 print("\nCamera matrix : \n", camera_mat) 
 print("\nDistortion coefficients : \n", distortion) 
-print("\nRotation vector : \n", rotation_vecs) 
-print("\nTranslation vector : \n", translation_vecs)

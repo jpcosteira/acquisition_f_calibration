@@ -55,7 +55,6 @@ def calibrate_camera(corner_coords_file, chessboard_sq_size, output_params_file)
             'resolutionx': resolution_width,
             'resolutiony': resolution_height,
             'error': ret
-            'fx':camera_matrix[0,0]
         }
         with open(output_params_file, 'w') as f:
             json.dump(calib_params, f)
