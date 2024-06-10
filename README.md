@@ -9,3 +9,4 @@ Image acquisiton for camera and "Calibration Object"  calibration !
 
  **aruco_object.py** - Acquire images of a calibration object (with arucos) and store them in a folder
 
+dados de calibração do objecto https://drive.sipg.tecnico.ulisboa.pt/s/PFXTaYxGGbzF4dd
